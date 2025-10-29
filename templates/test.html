@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sohbet Test Penceresi</title>
+    <style>
+      html, body { height:100%; margin:0; background:#0f172a; color:#e2e8f0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .wrap { display:flex; gap:8px; padding:8px; height:100%; box-sizing:border-box; }
+      iframe { flex:1; border:1px solid #1f2937; border-radius:10px; overflow:hidden; background:#111827; height:100%; }
+      .bar { position:fixed; top:8px; left:8px; right:8px; display:flex; gap:8px; align-items:center; z-index:10; }
+      .bar input { padding:8px 10px; border-radius:8px; border:1px solid #1f2937; background:#0b1324; color:#e5e7eb; }
+      .bar button { padding:8px 10px; border-radius:8px; border:0; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <span>İstemci 1 adı:</span>
+      <input id="n1" placeholder="Ayşe" value="Ayşe" />
+      <span>İstemci 2 adı:</span>
+      <input id="n2" placeholder="Mehmet" value="Mehmet" />
+      <button id="apply">Uygula</button>
+    </div>
+    <div class="wrap" style="padding-top:48px">
+      <iframe id="f1" src="/"></iframe>
+      <iframe id="f2" src="/"></iframe>
+    </div>
+    <script>
+      const f1 = document.getElementById('f1');
+      const f2 = document.getElementById('f2');
+      const n1 = document.getElementById('n1');
+      const n2 = document.getElementById('n2');
+      const apply = document.getElementById('apply');
+
+      function refresh() {
+        const u1 = encodeURIComponent(n1.value.trim() || 'Ayşe');
+        const u2 = encodeURIComponent(n2.value.trim() || 'Mehmet');
+        f1.src = '/?u=' + u1;
+        f2.src = '/?u=' + u2;
+      }
+
+      apply.addEventListener('click', refresh);
+      // İlk yüklemede varsayılanları uygula
+      refresh();
+    </script>
+  </body>
+  </html>
+
+

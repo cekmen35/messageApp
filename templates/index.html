@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mesajlaşma Uygulaması</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0f172a; color:#e2e8f0; margin:0; }
+      .container { max-width: 720px; margin: 32px auto; padding: 16px; }
+      .card { background:#111827; border:1px solid #1f2937; border-radius:12px; overflow:hidden; }
+      .card-header { padding:16px; border-bottom:1px solid #1f2937; font-weight:600; display:flex; gap:12px; align-items:center; }
+      .name { margin-left:auto; display:flex; gap:8px; align-items:center; }
+      .name input { width: 160px; padding:8px 10px; border-radius:8px; border:1px solid #1f2937; background:#0b1324; color:#e5e7eb; }
+      .name button { padding:8px 10px; }
+      .messages { height: 420px; overflow-y: auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+      .msg { padding:10px 12px; background:#0b1324; border:1px solid #1f2937; border-radius:10px; }
+      .msg strong { color:#93c5fd; }
+      .input-row { display:flex; gap:10px; padding:16px; border-top:1px solid #1f2937; background:#0b1020; }
+      input[type="text"] { flex:1; padding:12px; border-radius:10px; border:1px solid #1f2937; background:#0b1324; color:#e5e7eb; outline:none; }
+      input[type="text"]::placeholder { color:#94a3b8; }
+      button { padding:12px 16px; border-radius:10px; border:0; background:#2563eb; color:white; cursor:pointer; font-weight:600; }
+      button:disabled { background:#1f2937; cursor:not-allowed; }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          Gerçek Zamanlı Sohbet
+          <div class="name">
+            <input id="username_input" type="text" placeholder="Kullanıcı adı" />
+            <button id="save_name_btn" type="button">Kaydet</button>
+          </div>
+        </div>
+        <div id="chat_messages" class="messages"></div>
+        <div class="input-row">
+          <input id="message_input" type="text" placeholder="Mesajınızı yazın ve Enter'a basın..." />
+          <button id="send_btn" type="button">Gönder</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const socket = io();
+
+      function appendMessage(username, message, timestamp) {
+        const chatBox = document.getElementById('chat_messages');
+        const el = document.createElement('div');
+        el.className = 'msg';
+        const time = timestamp ? new Date(timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+        el.innerHTML = '<strong>' + (username || 'Anonim') + '</strong> <span style="color:#9ca3af">' + (time ? '• ' + time : '') + '</span><br>' + (message || '');
+        chatBox.appendChild(el);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      socket.on('connect', function () {
+        console.log('Sunucuya bağlandı');
+      });
+
+      socket.on('yeni_mesaj', function (data) {
+        appendMessage(data && data.kullanici, data && data.mesaj, data && data.zaman);
+      });
+
+      function sendMessage() {
+        const input = document.getElementById('message_input');
+        const text = input.value.trim();
+        if (!text) return;
+        const name = (window.currentName || '').trim() || 'Anonim';
+        socket.emit('gonderilen_mesaj', { kullanici: name, mesaj: text });
+        input.value = '';
+        input.focus();
+      }
+
+      // Kullanıcı adı yönetimi
+      const nameInput = document.getElementById('username_input');
+      const saveNameBtn = document.getElementById('save_name_btn');
+
+      // Query param (u=) ile gelirse öncelik ver, storage'a yazma
+      const params = new URLSearchParams(location.search);
+      const qpName = (params.get('u') || '').trim();
+      const saved = (localStorage.getItem('kullanici_adi') || '').trim();
+      window.currentName = qpName || saved || '';
+      if (window.currentName) {
+        nameInput.value = window.currentName;
+      }
+
+      saveNameBtn.addEventListener('click', function () {
+        const val = nameInput.value.trim();
+        if (!val) return;
+        window.currentName = val;
+        localStorage.setItem('kullanici_adi', val);
+      });
+
+      document.getElementById('send_btn').addEventListener('click', sendMessage);
+      document.getElementById('message_input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+    </script>
+  </body>
+  </html>
